@@ -1,28 +1,43 @@
 const con = require('../conexion/conexion.js');
 const crypto = require('crypto');
 
-class clientesServices{
+class usuariosServices{
     constructor(){
         this.con = con;
+        this.hash = crypto.createHash('sha256');
     }
 
     async create(data){
-        const final_pass = crypto.createHash('sha256').update(data.pass).digest('hex');
+        const query = 'INSERT INTO usuarios(usuario,pass,nombre,apellido,id_rol,id_sede,created_at,estado)VALUES (?,?,?,?,?,?,?,1);';
 
-        const query = 'INSERT INTO clientes(usuario,pass,nombre,telefono,correo,id_rol) VALUES(?,?,?,?,?,2)'
+        const date = new Date();
+        let year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        let hoy =  year+"-"+month+"-"+day;
+
+       
+        const final_pass = this.hash.update(data.pass).digest('hex');
+
+        console.log(final_pass);
+
+
         return new Promise((res, rej) =>{
             this.con.query(query,[
                 data.usuario,
                 final_pass,
                 data.nombre,
-                data.telefono,
-                data.correo
+                data.apellido,
+                data.id_rol,
+                data.id_sede,
+                hoy,
             ],
         
                 (error, data) =>{
                     if(!error){
                         res(data);
                     }else{
+                        // throw new Error(error.message);
                         res(error);
                     }
                    
@@ -34,7 +49,7 @@ class clientesServices{
     }
 
     async traerPass(data){
-        const query = 'SELECT id_cliente, usuario, pass FROM clientes WHERE usuario = ? ';
+        const query = 'SELECT id_usuario, usuario, pass FROM usuarios WHERE usuario = ? ';
          return new Promise((res, rej) =>{
             this.con.query(query,[data.usuario],
                 (error, datos) =>{
@@ -48,6 +63,20 @@ class clientesServices{
         });
     }
 
+    async guardarToken(token,id){
+        const query = 'UPDATE usuarios SET token = ?WHERE id_usuario = ?; ';
+        return new Promise((res, rej) =>{
+           this.con.query(query,[token,id],
+               (error, datos) =>{
+                   if(!error){
+                       res(true);
+                   }else{
+                       res(false);
+                   }
+               }
+           );
+       });
+    }
 
     async login(data){
         const validar_pass = crypto.createHash('sha256').update(data.pass).digest('hex');
@@ -56,7 +85,7 @@ class clientesServices{
 
         if(validar_pass === infoLog[0].pass){
 
-            let res = this.guardarToken(token,infoLog[0].id_cliente);
+            let res = this.guardarToken(token,infoLog[0].id_usuario);
 
             if(res){
                 return ({
@@ -85,21 +114,6 @@ class clientesServices{
         const token =  crypto.createHash('sha256').update(resetToken).digest('hex');
         
         return token;
-    }
-
-    async guardarToken(token,id){
-        const query = 'UPDATE clientes SET token = ?WHERE id_cliente = ?; ';
-        return new Promise((res, rej) =>{
-           this.con.query(query,[token,id],
-               (error, datos) =>{
-                   if(!error){
-                       res(true);
-                   }else{
-                       res(false);
-                   }
-               }
-           );
-       });
     }
 
     async find(){
@@ -165,4 +179,4 @@ class clientesServices{
 }
 
 
-module.exports = clientesServices;
+module.exports = usuariosServices;

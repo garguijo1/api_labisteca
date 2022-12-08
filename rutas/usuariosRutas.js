@@ -1,8 +1,8 @@
 const express = require('express');
-const clientesService = require('../servicios/clientesService.js');
+const usuariosService = require('../servicios/usuariosService.js');
 
 const router = express.Router();
-const service = new clientesService();
+const service = new usuariosService();
 
 router.get('/',async (req,res) =>{
 
@@ -24,21 +24,22 @@ router.get('/:idCliente',async (req,res) =>{
 
 router.post('/add',async (req,res) =>{
     const body = req.body;
-    const newCliente = await service.create(body);
+    const newUser = await service.create(body);
     res.status(201).json({
         message: 'created',
-        data: newCliente
+        data: newUser
     });
 });
 
 router.post('/login',async (req,res) =>{
     const body = req.body;
-    const newCliente = await service.login(body);
+    const newUser = await service.login(body);
     res.status(201).json({
-        message: newCliente.mensaje,
-        data: newCliente.data
+        message: newUser.mensaje,
+        data: newUser.data
     });
 });
+
 
 router.put('/:idCliente',async (req,res)=>{
 
